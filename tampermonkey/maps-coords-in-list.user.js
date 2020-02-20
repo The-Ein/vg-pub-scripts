@@ -8,8 +8,8 @@
 // @license      Apache License 2.0
 // @run-at       document-end
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/The-Ein/vg-pub-scripts/master/tempermonkey/maps-coords-in-list.user.js
-// @downloadURL  https://raw.githubusercontent.com/The-Ein/vg-pub-scripts/master/tempermonkey/maps-coords-in-list.user.js
+// @updateURL    https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/maps-coords-in-list.user.js
+// @downloadURL  https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/maps-coords-in-list.user.js
 // ==/UserScript==
 
 (async function(){
