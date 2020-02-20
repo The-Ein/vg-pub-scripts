@@ -1,2 +1,3 @@
 # vg-pub-scripts
-i love change readme
+Разнообразные скрипты для velgame.ru
+В некоторых папках есть свои README, которые лучше читать.
