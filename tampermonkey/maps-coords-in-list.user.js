@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         maps-coords-in-list
+// @name         Координаты карт в списке
 // @namespace    https://github.com/The-Ein
 // @version      0.1
 // @description  Отображает координаты карт в списках
