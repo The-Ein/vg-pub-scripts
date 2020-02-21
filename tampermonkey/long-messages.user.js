@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Длинные сообщения в чате
 // @namespace    https://github.com/The-Ein
-// @version      0.1
-// @description  Отображает координаты карт в списках
+// @version      0.2
+// @description  Снимает ограничение в 250 символов при написании сообщения в чат
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
 // @license      Apache License 2.0
