@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Длинные сообщения в чате
 // @namespace    https://github.com/The-Ein
-// @version      0.2
+// @version      0.3
 // @description  Снимает ограничение в 250 символов при написании сообщения в чат
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
@@ -15,12 +15,12 @@
 
 (() => {
 
-	// @match не поддерживает "*" в get параметрах
-    // https://developer.chrome.com/extensions/match_patterns
-	if(!location.href.match(/\?14&/))
-		return;
-
     let form = document.querySelector('form[action^="game.php?14&"]');
+
+    // @match не поддерживает "*" в get параметрах
+    // https://developer.chrome.com/extensions/match_patterns
+	if(!location.href.match(/\?14&/) || !form)
+		return;
 
     let textarea = form.querySelector('textarea');
     let max = parseInt(textarea.getAttribute('maxlength'));
