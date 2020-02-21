@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Координаты карт в списке
 // @namespace    https://github.com/The-Ein
-// @version      0.1
+// @version      0.2
 // @description  Отображает координаты карт в списках
 // @author       TheEin
 // @match        http://velgame.ru/*
