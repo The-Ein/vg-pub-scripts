@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Длинные сообщения в чате
 // @namespace    https://github.com/The-Ein
-// @version      0.3
+// @version      0.4
 // @description  Снимает ограничение в 250 символов при написании сообщения в чат
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
@@ -108,6 +108,9 @@
             // и оставшаяся часть начинается с не пробельного,
             // то высока вероятность, что мы разрезали слово
             let indiv = part.match(/\s$/) || text.match(/^\s/);
+
+            // или если это был последний кусок
+            indiv = indiv || !text.length;
 
             // если в куске нет пробелов, то и не пытаемся
             indiv = indiv || !part.match(/\s/);
