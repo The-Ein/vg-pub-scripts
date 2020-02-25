@@ -1,7 +1,7 @@
 ## Установка любого в tampermonkey:
 
 - скачиваем расширение c [tampermonkey.net](https://www.tampermonkey.net/), если ещё не сделали это
-- открываем нужный скрипт. Например [maps-coords-in-list.user.js](https://github.com/The-Ein/vg-pub-scripts/blob/master/tampermonkey/maps-coords-in-list.user.js)
+- открываем нужный скрипт. Например [maps-coords-in-list.user.js](/tampermonkey/maps-coords-in-list.user.js)
 - над кодом скрипта будет находится кнопка RAW, на неё нужно нажать.
 - после того как Tampermonkey подхватит скрипт, нажимаем Install(Установить)
 - ???
@@ -10,7 +10,7 @@
 ## Описание скриптов
 
 ### Координаты карт в списке
-Файл: [maps-coords-in-list.user.js](https://github.com/The-Ein/vg-pub-scripts/blob/master/tampermonkey/maps-coords-in-list.user.js) <br/>
+Файл: [maps-coords-in-list.user.js](/tampermonkey/maps-coords-in-list.user.js) <br/>
 Во всех списках, где есть карты сокровищ выводит координаты клада.
 Примерно так:
 ```
