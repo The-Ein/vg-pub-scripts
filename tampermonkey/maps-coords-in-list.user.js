@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Координаты карт в списке
 // @namespace    https://github.com/The-Ein
-// @version      0.3
+// @version      0.4
 // @description  Отображает координаты карт в списках
 // @author       TheEin
 // @match        http://velgame.ru/*
@@ -13,15 +13,7 @@
 // ==/UserScript==
 
 (async function(){
-    let cache = JSON.parse(localStorage['ein-maps-coords-cache'] || '{}');
-    let time = (new Date()).getTime();
-    let cache_time_ms = 1000 * 60 * 60 * 2; // кешируем на 2 часа
-
-    // удаляем старые данные
-    Object.keys(cache).forEach(key => {
-    	if(time - cache[key].time > cache_time_ms)
-    		delete cache[key];
-    })
+    clearMapCache();
 
     let links = document.querySelectorAll('a');
     let maps_links = [];
@@ -30,8 +22,7 @@
         let link = links[i];
         if(!link.innerText.match(/Карта сокровищ/)) continue;
 
-        // http://velgame.ru/game.php?7&1&0&21|322106 -> game.php?7&1&0&21
-        let cached = cache[link.href.replace(/.*(game.+?)\|.*/, '$1')];
+        let cached = getMap(link.href);
         if(cached){
         	link.innerHTML = link.innerHTML.replace(/(сокровищ)/, '$1 ' + cached.pos);
         	maps_links.push(link);
@@ -54,15 +45,50 @@
         if(coords) {
         	link.innerHTML = link.innerHTML.replace(/(сокровищ)( \d+\/\d+)?/, '$1 ' + coords[1]);
         	
-        	let key = link.href.replace(/.*(game.+?)\|.*/, '$1');
+            let cached = getMap(link.href);
+        	
         	// если не было - добавляем, если свежие - обновляем
-        	if(!cache[key] || cache[key].pos !== coords[1])
-	        	cache[link.href.replace(/.*(game.+?)\|.*/, '$1')] = {
-	        		pos: coords[1],
-	        		time: time
-	        	};
+        	if(!cached || cached.pos !== coords[1])
+                setMap(link.href, coords[1])
         }
     }
 
-    localStorage['ein-maps-coords-cache'] = JSON.stringify(cache);
+    function clearMapCache() {
+        let cache = JSON.parse(localStorage['ein-maps-coords-cache'] || '{}');
+        let time = (new Date()).getTime();
+        let cache_time_ms = 1000 * 60 * 60 * 2; // кешируем на 2 часа
+
+        // удаляем старые данные
+        Object.keys(cache).forEach(key => {
+            if(time - cache[key].time > cache_time_ms)
+                delete cache[key];
+        });
+
+        localStorage['ein-maps-coords-cache'] = JSON.stringify(cache);
+    }
+
+    function getMap(link) {
+        let cache = JSON.parse(localStorage['ein-maps-coords-cache'] || '{}');
+        
+        let key = linkToKey(link);
+        
+        return cache[key];
+    }
+
+    function setMap(link, pos) {
+        let cache = JSON.parse(localStorage['ein-maps-coords-cache'] || '{}');
+        
+        let key = linkToKey(link);
+        let time = (new Date()).getTime();
+
+        cache[key] = {pos,time}
+        
+        localStorage['ein-maps-coords-cache'] = JSON.stringify(cache);
+    }
+
+    function linkToKey(link) {
+        // http://velgame.ru/game.php?7&1&0&21|322106 -> game.php?7&21
+        return link.replace(/.*(game\.php\?\d+)&\d+&\d+(&\d+).*\|.*/, '$1$2');
+    }
+
 })();
