@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Продажа вещей из мешка
 // @namespace    https://github.com/The-Ein
-// @version      0.1
+// @version      0.2
 // @description  Добаляет в меню вещи формочку для выставлния на Торговую площадь.
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
@@ -23,6 +23,10 @@
     item_id = item_id[1];
 
     let count = document.body.innerText.match(/Количество: (\d+)\/(\d+)/);
+
+    if (!count)
+        return;
+
     count = {
         curr: count[1],
         max: count[2]
