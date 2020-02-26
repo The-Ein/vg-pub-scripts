@@ -12,14 +12,14 @@
 // @downloadURL  https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/sell-from-bag.user.js
 // ==/UserScript==
 
-(async function(){
+(async function() {
     let item_id = location.href.match(/game\.php\?7&\d+&\d+&(\d+)/);
 
     let is_locked = document.body.innerText.match(/Вещь привязана к герою/);
-    
-    if(!item_id || is_locked)
+
+    if (!item_id || is_locked)
         return;
-    
+
     item_id = item_id[1];
 
     let count = document.body.innerText.match(/Количество: (\d+)\/(\d+)/);
@@ -33,14 +33,14 @@
     // вставляем формочку перед кнопкой "Назад"
     back_button.parentElement.insertBefore(create_from(item_id, count), back_button);
 
-    function create_from(item_id, count){
+    function create_from(item_id, count) {
         let form = document.createElement('form');
 
         form.action = `game.php?46&1&0&${item_id}&1`;
         form.method = "post";
         form.className = "fblock cntr";
 
-        if(count.max == 1)
+        if (count.max == 1)
             form.innerHTML += `<input type="hidden" name="kolvo" value="1">`;
         else
             form.innerHTML += `

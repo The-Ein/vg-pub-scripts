@@ -12,23 +12,23 @@
 // @downloadURL  https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/maps-coords-in-list.user.js
 // ==/UserScript==
 
-(async function(){
+(async function() {
     clearMapCache();
 
     let links = document.querySelectorAll('a');
     let maps_links = [];
     // первым проходом сортируем ссылки и выводим значения из кеша
-    for(let i = 0; i < links.length; i++){
+    for (let i = 0; i < links.length; i++) {
         let link = links[i];
-        if(!link.innerText.match(/Карта сокровищ/)) continue;
+        if (!link.innerText.match(/Карта сокровищ/)) continue;
 
         let cached = getMap(link.href);
-        if(cached){
-        	link.innerHTML = link.innerHTML.replace(/(сокровищ)/, '$1 ' + cached.pos);
-        	maps_links.push(link);
-        }else{
-        	// если ссылки не было в кеше, то у неё больше приоритет 
-        	maps_links.unshift(link);
+        if (cached) {
+            link.innerHTML = link.innerHTML.replace(/(сокровищ)/, '$1 ' + cached.pos);
+            maps_links.push(link);
+        } else {
+            // если ссылки не было в кеше, то у неё больше приоритет 
+            maps_links.unshift(link);
         }
     }
 
@@ -37,18 +37,18 @@
     // как следствие ссылки будут невалидными
     // из-за этого в любом случае проверяем все ссылки 
     // и если что-то не так, то обновляем кеш
-    for(let i = 0; i < maps_links.length; i++){
-    	let link = maps_links[i];
-    	let resp = await fetch(link.href).then(resp => resp.text());
+    for (let i = 0; i < maps_links.length; i++) {
+        let link = maps_links[i];
+        let resp = await fetch(link.href).then(resp => resp.text());
         let coords = resp.match(/тут: (\d+\/\d+)/);
         // может вернуться страница "Идёт бой" или "Ошибка авторизации"
-        if(coords) {
-        	link.innerHTML = link.innerHTML.replace(/(сокровищ)( \d+\/\d+)?/, '$1 ' + coords[1]);
-        	
+        if (coords) {
+            link.innerHTML = link.innerHTML.replace(/(сокровищ)( \d+\/\d+)?/, '$1 ' + coords[1]);
+
             let cached = getMap(link.href);
-        	
-        	// если не было - добавляем, если свежие - обновляем
-        	if(!cached || cached.pos !== coords[1])
+
+            // если не было - добавляем, если свежие - обновляем
+            if (!cached || cached.pos !== coords[1])
                 setMap(link.href, coords[1])
         }
     }
@@ -60,7 +60,7 @@
 
         // удаляем старые данные
         Object.keys(cache).forEach(key => {
-            if(time - cache[key].time > cache_time_ms)
+            if (time - cache[key].time > cache_time_ms)
                 delete cache[key];
         });
 
@@ -69,20 +69,23 @@
 
     function getMap(link) {
         let cache = JSON.parse(localStorage['ein-maps-coords-cache'] || '{}');
-        
+
         let key = linkToKey(link);
-        
+
         return cache[key];
     }
 
     function setMap(link, pos) {
         let cache = JSON.parse(localStorage['ein-maps-coords-cache'] || '{}');
-        
+
         let key = linkToKey(link);
         let time = (new Date()).getTime();
 
-        cache[key] = {pos,time}
-        
+        cache[key] = {
+            pos,
+            time
+        }
+
         localStorage['ein-maps-coords-cache'] = JSON.stringify(cache);
     }
 

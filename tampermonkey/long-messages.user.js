@@ -12,15 +12,14 @@
 // @downloadURL  https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/long-messages.user.js
 // ==/UserScript==
 
-
 (() => {
 
     let form = document.querySelector('form[action^="game.php?14&"]');
 
     // @match не поддерживает "*" в get параметрах
     // https://developer.chrome.com/extensions/match_patterns
-	if(!location.href.match(/\?14&/) || !form)
-		return;
+    if (!location.href.match(/\?14&/) || !form)
+        return;
 
     let textarea = form.querySelector('textarea');
     let max = parseInt(textarea.getAttribute('maxlength'));
@@ -32,7 +31,7 @@
 
     textarea.oninput = () => {
         let parts = split(textarea.value);
-        let lastLength = parts[parts.length-1].length;
+        let lastLength = parts[parts.length - 1].length;
         let word = messageWord(parts.length);
         info.innerHTML = `${parts.length} ${word}. Осталось символов ≈${max - lastLength}`;
     }
@@ -57,9 +56,9 @@
         let referrer = location.href;
 
         for (let i = 0; i < text.length; i++) {
-        	// что бы самому не собирать тело запроса,
-        	// просто пихаем по очереди все куски в textarea
-        	// и сериализуем местными функциями
+            // что бы самому не собирать тело запроса,
+            // просто пихаем по очереди все куски в textarea
+            // и сериализуем местными функциями
             textarea.value = text[i];
             let data = new URLSearchParams(new FormData(form)).toString();
 
@@ -132,14 +131,14 @@
         return parts.length ? parts : [''];
     }
 
-    function messageWord(count){
+    function messageWord(count) {
         let lastDigit = count.toString().match(/(\d)$/)[1];
 
         // 5/6/7/11/25/37 сообщений
-        if((count >= 5 && count <= 20) || lastDigit >= 5)
+        if ((count >= 5 && count <= 20) || lastDigit >= 5)
             return 'сообщений';
         // 21/51/101/100501 сообщение
-        if(lastDigit == 1)
+        if (lastDigit == 1)
             return 'сообщение';
         // 22/73/144 сообщения
         return 'сообщения'
