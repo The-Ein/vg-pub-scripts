@@ -32,8 +32,7 @@
             let is_same_receiver = last_message.receiver === message.receiver;
             let is_same_sender = last_message.sender.name === message.sender.name;
 
-            if (Math.abs(time_diff) < 4000 && is_same_sender && is_same_receiver) {
-
+            if (Math.abs(time_diff) < 3 && is_same_sender && is_same_receiver) {
                 last_message.time = message.time;
                 last_message.timestamp = message.timestamp;
                 last_message.text = concatMessages(last_message.text, message.text);
@@ -117,12 +116,10 @@
 
 
             let time = info.time.split(':');
-            info.timestamp = new Date();
-            info.timestamp.setHours(time[0]);
-            info.timestamp.setMinutes(time[1]);
-            info.timestamp.setSeconds(time[2]);
-            // не реальный timestamp. Нужен только для того что бы сравнивать сообщения по времени            
-            info.timestamp = info.timestamp.getTime();
+            // не реальный timestamp. Нужен только для того что бы сравнивать сообщения по времени
+            info.timestamp = parseInt(time[0]) * 60 * 60;
+            info.timestamp += parseInt(time[1]) * 60;
+            info.timestamp += parseInt(time[2]);
 
 
             info.sender = $message.find('a.bold.f2');
