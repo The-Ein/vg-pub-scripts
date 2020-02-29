@@ -6,7 +6,7 @@
     let log = console.log;
 
     log('better chat');
-
+    loadCustomCss();
 
     getNewMessages().then(messages => {
         log(messages);
@@ -55,20 +55,9 @@
     }
 
     function concatMessages(oldText, newText) {
-        // достаточно грязный кмк трюк, но думаю сойдёт
-        let new_par_count = (newText.match(/abzac/) || []);
+        newText = newText.replace(/<\/?div.*?>/gm, '');
 
-        // проверяем сколько abzac в новом куске
-        // если не один, то просто склеиваем и отдаём
-        if (new_par_count.length !== 1) {
-            return newText + oldText;
-        }
-
-        // иначе удаляем в новом куске начальный и конечные div'ы
-        // Пример: <div class="abzac f3">sed.</div> -> sed.
-        newText = newText.replace(/^<div.*?>/, '').replace(/<\/div>$/, '');
-
-        // потом вставляем новый текст сразу после первого открывающего div'а
+        // вставляем новый текст сразу после первого открывающего div'а
         return oldText.replace(/^(<div.+?>)/, `$1${newText}`);
 
     }
@@ -154,6 +143,22 @@
         });
 
         return list;
+    }
+
+
+
+    function loadCustomCss(){
+    	// "можно было лучше", - скажите вы
+    	// "сделай и отправь pull request", - скажу я
+
+    	let $style = $('<style>');
+    	$('head').append($style);
+
+    	$style.html(`
+    		.abzac{
+    			white-space: pre-line;
+    		}
+    	`);
     }
 
 
