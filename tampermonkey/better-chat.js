@@ -6,13 +6,23 @@
     let log = console.log;
 
     log('better chat');
+
     loadCustomCss();
 
-    getNewMessages().then(messages => {
-        log(messages);
-        printMessages(messages, $('body > .main .chblock0').parent());
-    });
+    let $main_container = $('body > .main .chblock0').parent();
 
+    printMessages(
+        parseMessages($main_container.find('.chblock0')),
+        $main_container
+    );
+
+    setInterval(() => getNewMessages().then(messages => {
+        printMessages(messages, $main_container);
+    }), 1000);
+
+    /*----------------------*/
+    /*----------------------*/
+    /*----------------------*/
 
     function printMessages(list, $container) {
 
@@ -49,8 +59,6 @@
         repack.forEach(item => {
             $container.append($messageEl(item));
         });
-
-        log(repack);
     }
 
     function concatMessages(oldText, newText) {
@@ -58,7 +66,6 @@
 
         // вставляем новый текст сразу после первого открывающего div'а
         return oldText.replace(/^(<div.+?>)/, `$1${newText}`);
-
     }
 
     function $messageEl(info) {
@@ -76,15 +83,13 @@
         return $container;
     }
 
-
     async function getNewMessages() {
         let update_url = this.update_url || location.href;
 
         let html = await fetch(update_url).then(r => r.text());
 
         let $container = $('<div>');
-        //$container.attr('id', `cont${Math.random()}${Math.random()}${Math.random()}`.replace(/[^0-9cont]/gm);)
-        //$container.css('display', 'none');
+        $container.css('display', 'none');
         $(document.body).append($container);
 
         html = html.replace(/.*<body.*?>(.+?)<\/body>.*/gm, '$1');
@@ -142,16 +147,19 @@
         return list;
     }
 
+    /*----------------------*/
+    /*----------------------*/
+    /*----------------------*/
 
 
-    function loadCustomCss(){
-    	// "можно было лучше", - скажите вы
-    	// "сделай и отправь pull request", - скажу я
+    function loadCustomCss() {
+        // "можно было лучше", - скажите вы
+        // "можно. делай и отправь pull request", - скажу я
 
-    	let $style = $('<style>');
-    	$('head').append($style);
+        let $style = $('<style>');
+        $('head').append($style);
 
-    	$style.html(`
+        $style.html(`
     		.abzac{
     			white-space: pre-line;
     		}
