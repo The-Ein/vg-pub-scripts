@@ -6,7 +6,9 @@
     if (!$('header').text().match(/Чат/))
         return;
 
-    let log = console.log;
+    const log = console.log;
+    const message_chunk_length = 250;
+
 
     log('better chat');
 
@@ -36,14 +38,14 @@
                 $button = $(this);
         });
 
-        let $form = $('<form class="message-form">');
+        let $form = $('<form class="message_form">');
         $form.insertBefore($button);
 
         $form.html(`
 			<div class="msg" contenteditable="true" role="textbox"></div>
 			<textarea class="hidden" name="mes"></textarea>
 			<div class="bottom-panel">
-				<div class="message-info small">1 сообщение. Осталось символов ≈250</div>
+				<div class="message_info small">1 сообщение. Осталось символов ≈250</div>
 				<button class="info" type="submit">Отправить (shift+enter)</button>
 			</div>
 		`);
@@ -54,11 +56,30 @@
             }
         });
 
+        let $message_info = $form.find('.message_info');
+        log($message_info);
         $form.find('.msg').on('input', function() {
+        	let $textarea = $form.find('[name="mes"]');
+        	$textarea.val(clearText($(this).html()));
 
+        	let parts = split($textarea.val());
+	        let lastLength = parts[parts.length - 1].length;
+	        let word = messageWord(parts.length);
+	        
+	        $message_info.html(`${parts.length} ${word}. Осталось символов ≈${message_chunk_length - lastLength}`);
         });
 
     };
+
+    function clearText(text){
+    	// сначала заменяем все открывающие <div> на переносы
+    	// что бы, внезапно, не проебать переносы.
+    	// после удаляем все теги которые добавил браузер
+    	// все пользовательское будет выглядеть как-то так: &lt; (<)
+    	return text
+    		.replace(/<div.*?>/gm, `\n`)
+    		.replace(/<\/?.+?>/gm, '');
+    }
 
     function split(text) {
         let parts = [];
@@ -68,8 +89,8 @@
             text = text.replace(/^\s+/, '');
 
             // отрезаем кусок
-            let part = text.slice(0, 250);
-            text = text.slice(250);
+            let part = text.slice(0, message_chunk_length);
+            text = text.slice(message_chunk_length);
 
             // если кусок заканчивается на непробельный символ
             // и оставшаяся часть начинается с не пробельного,
@@ -89,7 +110,7 @@
             // иначе возвращаем огрызок в остаток
             let subpart = part.match(/\S+$/)[0];
 
-            part = part.slice(0, max - subpart.length);
+            part = part.slice(0, message_chunk_length - subpart.length);
             text = subpart.concat(text);
 
             parts.push(part);
@@ -97,6 +118,19 @@
 
         // если текст получился пустым
         return parts.length ? parts : [''];
+    }
+
+    function messageWord(count) {
+        let lastDigit = count.toString().match(/(\d)$/)[1];
+
+        // 5/6/7/11/25/37 сообщений
+        if ((count >= 5 && count <= 20) || lastDigit >= 5)
+            return 'сообщений';
+        // 21/51/101/100501 сообщение
+        if (lastDigit == 1)
+            return 'сообщение';
+        // 22/73/144 сообщения
+        return 'сообщения'
     }
 
     /*----------------------*/
@@ -240,7 +274,7 @@
     			white-space: pre-line;
     		}
 
-    		.message-form{
+    		.message_form{
     			text-align: right;
     		}
 
