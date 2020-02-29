@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Длинные сообщения в чате
 // @namespace    https://github.com/The-Ein
-// @version      0.4
+// @version      0.5
 // @description  Снимает ограничение в 250 символов при написании сообщения в чат
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
@@ -100,8 +100,8 @@
             text = text.replace(/^\s+/, '');
 
             // отрезаем кусок
-            let part = text.slice(0, 250);
-            text = text.slice(250);
+            let part = text.slice(0, max);
+            text = text.slice(max);
 
             // если кусок заканчивается на непробельный символ
             // и оставшаяся часть начинается с не пробельного,
