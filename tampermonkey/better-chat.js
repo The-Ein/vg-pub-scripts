@@ -1,5 +1,8 @@
 (function better_chat(argument) {
 
+    // "можно было лучше", - скажите вы
+    // "можно. делай и отправь pull request", - скажу я
+
     if (!$('header').text().match(/Чат/))
         return;
 
@@ -8,6 +11,7 @@
     log('better chat');
 
     loadCustomCss();
+    insertMessageForm();
 
     let $main_container = $('body > .main .chblock0').parent();
 
@@ -19,6 +23,81 @@
     setInterval(() => getNewMessages().then(messages => {
         printMessages(messages, $main_container);
     }), 1000);
+
+
+    /*----------------------*/
+    /*----------------------*/
+    /*----------------------*/
+
+    function insertMessageForm() {
+        $button = null;
+        $('.main > a.info').each(function() {
+            if ($(this).text().match(/Написать/im))
+                $button = $(this);
+        });
+
+        let $form = $('<form class="message-form">');
+        $form.insertBefore($button);
+
+        $form.html(`
+			<div class="msg" contenteditable="true" role="textbox"></div>
+			<textarea class="hidden" name="mes"></textarea>
+			<div class="bottom-panel">
+				<div class="message-info small">1 сообщение. Осталось символов ≈250</div>
+				<button class="info" type="submit">Отправить (shift+enter)</button>
+			</div>
+		`);
+
+        $('div[contenteditable]').keydown(function(e) {
+            if (e.shiftKey && e.keyCode === 13) {
+                $form.submit();
+            }
+        });
+
+        $form.find('.msg').on('input', function() {
+
+        });
+
+    };
+
+    function split(text) {
+        let parts = [];
+
+        while (text.length) {
+            // удаляем пустые символы в начале
+            text = text.replace(/^\s+/, '');
+
+            // отрезаем кусок
+            let part = text.slice(0, 250);
+            text = text.slice(250);
+
+            // если кусок заканчивается на непробельный символ
+            // и оставшаяся часть начинается с не пробельного,
+            // то высока вероятность, что мы разрезали слово
+            let indiv = part.match(/\s$/) || text.match(/^\s/);
+
+            // или если это был последний кусок
+            indiv = indiv || !text.length;
+
+            // если в куске нет пробелов, то и не пытаемся
+            indiv = indiv || !part.match(/\s/);
+            if (indiv) {
+                parts.push(part);
+                continue;
+            }
+
+            // иначе возвращаем огрызок в остаток
+            let subpart = part.match(/\S+$/)[0];
+
+            part = part.slice(0, max - subpart.length);
+            text = subpart.concat(text);
+
+            parts.push(part);
+        }
+
+        // если текст получился пустым
+        return parts.length ? parts : [''];
+    }
 
     /*----------------------*/
     /*----------------------*/
@@ -153,15 +232,32 @@
 
 
     function loadCustomCss() {
-        // "можно было лучше", - скажите вы
-        // "можно. делай и отправь pull request", - скажу я
-
         let $style = $('<style>');
         $('head').append($style);
 
         $style.html(`
     		.abzac{
     			white-space: pre-line;
+    		}
+
+    		.message-form{
+    			text-align: right;
+    		}
+
+    		.hidden{
+    			display:none;
+    		}
+
+    		.msg{
+    			min-height: 40px;
+			    min-width: 100px;
+			    font-size: 16px;
+			    background: #40393a;
+			    color: #9acd32;
+			    padding: 15px 20px;
+			    text-align: left;
+
+			    outline: none;
     		}
     	`);
     }
