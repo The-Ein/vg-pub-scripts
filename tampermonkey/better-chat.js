@@ -13,9 +13,10 @@
     log('better chat');
 
     loadCustomCss();
-    insertMessageForm();
 
     const $main_container = $('body > .main .chblock0').parent();
+
+    init();
 
     printMessages(
         parseMessages($main_container.find('.chblock0')),
@@ -29,7 +30,11 @@
     /*----------------------*/
     /*----------------------*/
 
-    function insertMessageForm() {
+    function init() {
+
+        control_buttons.$write.addClass('hidden');
+        control_buttons.$update.addClass('hidden');
+
         let $form = $('<form class="message_form" method="post">');
         $form.insertBefore(control_buttons.$write);
 
@@ -37,8 +42,8 @@
             <div class="msg" contenteditable="true" role="textbox"></div>
             <textarea class="hidden" name="mes"></textarea>
             <div class="bottom-panel">
-                <div class="col resonse">
-                    <div class="resonse_for"></div>
+                <div class="col response">
+                    <div class="response_for"></div>
                     <label>
                         <input type="checkbox" name="lichka"> Личное
                     </label>
@@ -88,9 +93,22 @@
                 .then(updateChat);
             $form[0].reset();
             $form.find('.msg').html('');
+            $form.find('.response_for').click();
 
             e.preventDefault();
             return false;
+        });
+
+        $main_container.on('click', '.response_button', function(e) {
+            e.preventDefault();
+
+            $form.attr('action', makeActionLink($(this).attr('href')));
+            $form.find('.response_for')
+                .one('click', function() {
+                    $form.attr('action', makeActionLink(control_buttons.$write.attr('href')))
+                    $(this).html('');
+                })
+                .html(`Ответ для <span class="name">${$(this).text()}</span>`);
         });
     };
 
@@ -151,10 +169,12 @@
             // почему-то если отпралять только обязательные заголовки, 
             // то сообщение не отправляется, поэтому даём серверу то, 
             // что он хочет
-            let html = await fetch_queue(makeActionLink(referrer), {
+            let html = await fetch_queue($form.attr('action') || referrer, {
                 "credentials": "include",
                 "headers": {
-                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                    "accept": "text/html,application/xhtml+xml," +
+                        "application/xml;q=0.9,image/webp,image/apng," +
+                        "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
                     "accept-language": "en-US,en;q=0.9",
                     "cache-control": "max-age=0",
                     "content-type": "application/x-www-form-urlencoded",
@@ -174,7 +194,7 @@
 
             control_buttons.$write.attr('href', referrer);
 
-            log('referrer', referrer);
+            // log('referrer', referrer);
         }
     }
 
@@ -285,7 +305,7 @@
 
         $container.html(`
                 <span class="small f3">${info.time}</span>
-                <a class="bold f2" href="${info.sender.answer}">${info.sender.name}</a>
+                <a class="bold f2 response_button" href="${info.sender.answer}">${info.sender.name}</a>
                 [<a class="f23" href="${info.sender.inf}">inf</a>]
                 ${info.text}
             `);
@@ -397,6 +417,62 @@
                 text-align: left;
 
                 outline: none;
+            }
+
+            .bottom-panel {
+                display: flex;
+                width: 100%;
+            }
+
+            .bottom-panel > .col {
+                flex-grow: 1;
+                text-align: center;
+                box-sizing: border-box;
+                padding: 10px;
+                line-height: 170%;
+            }
+
+            .bottom-panel > .col:first-child {
+                text-align: left;
+            }
+
+            .bottom-panel > .col:last-child {
+                text-align: right;
+            }
+
+            .response_for {
+                position: relative;
+                cursor: pointer;
+            }
+
+            .response_for:before {
+                content: "+";
+                color: red;
+                display: inline-block;
+                padding: 0 4px 0 2px;
+                box-sizing: border-box;
+                transform: rotate(45deg);
+            }
+
+            .response_for:empty:before {
+                display: none;
+            }
+
+            .response_for .name {
+                color: #00370e;
+                font-weight: bold;
+            }
+
+            .response_for:empty + label {
+                display: none;
+            }
+
+            .bottom-panel label {
+                cursor: pointer;
+            }
+
+            .bottom-panel button {
+                cursor: pointer;
             }
         `);
     }
