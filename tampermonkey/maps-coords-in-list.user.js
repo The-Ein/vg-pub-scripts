@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Координаты карт в списке
 // @namespace    https://github.com/The-Ein
-// @version      0.4
+// @version      0.5
 // @description  Отображает координаты карт в списках
 // @author       TheEin
 // @match        http://velgame.ru/*
+// @match        http://lt-site.ru/*
 // @license      Apache License 2.0
 // @run-at       document-end
 // @grant        none

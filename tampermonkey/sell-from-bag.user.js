@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Продажа вещей из мешка
 // @namespace    https://github.com/The-Ein
-// @version      0.2
+// @version      0.3
 // @description  Добаляет в меню вещи формочку для выставлния на Торговую площадь.
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
+// @match        http://lt-site.ru/game.php*
 // @license      Apache License 2.0
 // @run-at       document-end
 // @grant        none

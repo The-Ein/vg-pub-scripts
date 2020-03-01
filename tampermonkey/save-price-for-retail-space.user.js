@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Сохранение последней цены за предмет
 // @namespace    https://github.com/The-Ein
-// @version      0.1
+// @version      0.2
 // @description  Автоматически заполняет поле цены, при выставлении товара на ТП, последней ценой за этот товар.
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
+// @match        http://lt-site.ru/game.php*
 // @license      Apache License 2.0
 // @run-at       document-end
 // @grant        none
