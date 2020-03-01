@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Улучшеный чат
 // @namespace    https://github.com/The-Ein
-// @version      0.4
+// @version      0.1
 // @description  Заменяет чат в игре на его улучшенную версию
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
+// @match        http://lt-site.ru/game.php*
 // @license      Apache License 2.0
 // @run-at       document-end
 // @grant        none
