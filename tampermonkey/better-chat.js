@@ -1,4 +1,4 @@
-(function better_chat(argument) {
+(function better_chat() {
 
     // "можно было лучше", - скажите вы
     // "можно. делай и отправь pull request", - скажу я
@@ -7,22 +7,37 @@
         return;
 
     const log = console.log;
+
+    /**
+        Длина оригинального сообщения
+    */
     const message_chunk_length = 250;
+
+    /**
+        Максимальное время при котором сообщения склеиваются
+    */
+    const messages_concat_time = 3;
+
+    // основные кнопки Написать, Обновить, Герои, Смайлы
     const control_buttons = getControlButtons();
 
-    log('better chat');
-
+    // Грузим стили для своей формы
     loadCustomCss();
 
+    // контейнер в котором идёт работа
     const $main_container = $('body > .main .chblock0').parent();
 
+    // вставляем форму, скрываем кнопки, 
+    // вешаем обработчики событий
     init();
 
+    // Обрабатываем текущие сообщения
     printMessages(
         parseMessages($main_container.find('.chblock0')),
         $main_container
     );
 
+    // Качаем новые и обновляем каждые 5 секунд
     setInterval(updateChat, 5000);
 
 
@@ -31,39 +46,30 @@
     /*----------------------*/
 
     function init() {
-
+        // скрываем кнопки Написать и Обновить т.к. они больше не нужны пользователю 
         control_buttons.$write.addClass('hidden');
         control_buttons.$update.addClass('hidden');
 
+        // какой-то гений пихнул пагинацию в один блок с сообщениями
+        // иии... приходится это исправлять
         fixPagination();
 
+        // создаём формочку
         let $form = $('<form class="message_form" method="post">');
         $form.insertBefore(control_buttons.$write);
+        $form.html(getFormHtml());
 
-        $form.html(`
-            <div class="msg" contenteditable="true" role="textbox"></div>
-            <textarea class="hidden" name="mes"></textarea>
-            <div class="bottom-panel">
-                <div class="col response">
-                    <div class="response_for"></div>
-                    <label>
-                        <input type="checkbox" name="lichka"> Личное
-                    </label>
-                </div>
-                <div class="col">
-                    <button class="info" type="submit">Отправить (shift+enter)</button>
-                    <div class="message_info small">1 сообщение. Осталось символов ≈250</div>
-                </div>
-            </div>
-        `);
 
         $('div[contenteditable]').keydown(function(e) {
             // отправка сообщения на shift+enter
+            // но только в форме
             if (e.shiftKey && e.keyCode === 13) {
                 $form.submit();
             }
         }).on('paste', function(e) {
-            // чистка текста перед вставкой
+            // чистим вставляемый текст
+            // из-за того что используется div, 
+            // вёрстка может вставиться 1 в 1
             e.preventDefault();
             var text = '';
             if (e.clipboardData || e.originalEvent.clipboardData) {
@@ -78,6 +84,8 @@
             }
         });
 
+        // выводим и обновляем инфу о том сколько будет сообщений,
+        // и колличество оставшихся символов в текущем сообщении  
         let $message_info = $form.find('.message_info');
         $form.find('.msg').on('input', function() {
             let $textarea = $form.find('[name="mes"]');
@@ -90,6 +98,8 @@
             $message_info.html(`${parts.length} ${word}. Осталось символов ≈${message_chunk_length - lastLength}`);
         });
 
+        // отправляем сообщения при submit
+        // так же чистим форму и принудительно обновляем сообщения 
         $form.submit(function(e) {
             send($form.clone())
                 .then(updateChat);
@@ -101,6 +111,7 @@
             return false;
         });
 
+        // ловим клики по никам для ответа
         $main_container.on('click', '.response_button', function(e) {
             e.preventDefault();
 
@@ -110,7 +121,7 @@
                     $form.attr('action', makeActionLink(control_buttons.$write.attr('href')))
                     $(this).html('');
                 })
-                .html(`Ответ для <span class="name">${$(this).text()}</span>`); 
+                .html(`Ответ для <span class="name">${$(this).text()}</span>`);
 
             let is_private = $(this).parent().attr('data-pritate') === 'true';
             $('[name="lichka"]').prop('checked', is_private);
@@ -164,16 +175,17 @@
         for (let i = 0; i < text.length; i++) {
             // что бы самому не собирать тело запроса,
             // просто пихаем по очереди все куски в textarea
-            // и сериализуем функциями
+            // и сериализуем
             $textarea.val(text[i]);
             let data = $form.serialize();
 
+            // как оказалось, для того что бы отправлять кучу сообщений
+            // нужно делать вид что мы честно жмём на кнопки "Написать" и "Отправить"
             let referrer = control_buttons.$write.attr('href');
             await fetch_queue(referrer);
 
-            // почему-то если отпралять только обязательные заголовки, 
-            // то сообщение не отправляется, поэтому даём серверу то, 
-            // что он хочет
+            // почему-то если отпралять только обязательные заголовки,
+            // то сообщение не отправляется, поэтому даём серверу то, что он хочет
             let html = await fetch_queue(makeActionLink($form.attr('action') || referrer), {
                 "credentials": "include",
                 "headers": {
@@ -192,14 +204,10 @@
                 "mode": "cors"
             }).then(resp => resp.text());
 
-            // как оказалось, для того что бы отправлять кучу сообщений
-            // нужно делать вид что мы честно жмём на кнопки "Отправить" и "Написать"
+            // сохраняем ссылку из кнопки Написать для последующих сообщений
             let writeLinkHash = html.match(/\|(\d+)">Написать/)[1];
             referrer = referrer.replace(/\|.+/, `|${writeLinkHash}`);
-
             control_buttons.$write.attr('href', referrer);
-
-            // log('referrer', referrer);
         }
     }
 
@@ -272,6 +280,8 @@
         let repack = [];
 
         let last_ind = () => repack.length - 1;
+
+        // проходимся по всем сообщениям
         for (let i = 0; i < list.length; i++) {
             let message = list[i];
             if (repack.length === 0) {
@@ -286,7 +296,9 @@
             let is_same_sender = last_message.sender.name === message.sender.name;
             let is_same_privat = last_message.is_privat === message.is_privat;
 
-            if (Math.abs(time_diff) < 3 && is_same_sender && is_same_receiver && is_same_privat) {
+            // и если у нас совпали условия, то склеиваем с предыдущим
+
+            if (Math.abs(time_diff) < messages_concat_time && is_same_sender && is_same_receiver && is_same_privat) {
                 last_message.time = message.time;
                 last_message.timestamp = message.timestamp;
                 last_message.text = concatMessages(last_message, message);
@@ -306,8 +318,11 @@
     }
 
     function concatMessages(oldMessage, newMessage) {
+        // удялем все div'ы т.к. чиним это стилями
         let newText = newMessage.text.replace(/<\/?div.*?>/gm, '');
 
+        // У Геральда всё не как у людей, 
+        // поэтому добавляем к его сообщениям переносы в конце
         if (oldMessage.is_herald)
             newText += `\n`;
 
@@ -317,14 +332,17 @@
     }
 
     function $messageEl(info) {
+        // собираем блок сообщения
         let $container = $('<div class="chblock0">');
 
-        if(info.is_privat)
+        // конечно добавляем немного информации от себя
+        if (info.is_privat)
             $container.attr('data-pritate', 'true');
 
-        if(info.is_herald)
+        if (info.is_herald)
             $container.attr('data-herald', 'true');
 
+        // но в остальном всё стандартно
         $container.html(`
                 <span class="small f3">${info.time}</span>
                 <a class="bold f2 response_button" href="${info.sender.answer}">${info.sender.name}</a>
@@ -332,6 +350,8 @@
                 ${!info.is_privat ? '' : '<span class="f16">[личное]</span>'}
                 ${info.text}
             `);
+
+        // если это было ответом, то добавляем ник получателя в начале
         if (info.receiver)
             $container.find('.abzac').eq(0).prepend(`<span class="bold f23">${info.receiver}, </span>`);
 
@@ -341,14 +361,16 @@
     async function getNewMessages() {
         let update_url = this.update_url || location.href;
 
+        // качаем страницу с сообщениями
         let html = await fetch_queue(update_url).then(r => r.text());
 
         let $container = $('<div>');
-        $container.css('display', 'none');
 
+        // забираем только содержимое body
         html = html.replace(/.*<body.*?>(.+?)<\/body>.*/gm, '$1');
         $container.html(html);
 
+        // берём свежую ссылку для обновления
         $container.find('.main > a.info').each(function() {
             if ($(this).text() === 'Обновить')
                 update_url = $(this).attr('href');
@@ -365,16 +387,22 @@
     function parseMessages($list) {
         let list = [];
 
+        // проходимся по всем элементам 
         $list.each(function() {
             let $message = $(this);
 
+            // т.к. объекты передаются по ссылке, 
+            // то сразу после создания мы вставляем его в массив
+            // и только потом заполняем
             let info = {};
             list.push(info);
 
             info.time = $message.find('.small.f3:first-child').text();
 
-            let time = info.time.split(':');
             // не реальный timestamp. Нужен только для того что бы сравнивать сообщения по времени
+            let time = info.time.split(':');
+
+            // 12:23:45 -> 12 * 60 * 60 + 23 * 60 + 45
             info.timestamp = parseInt(time[0]) * 60 * 60;
             info.timestamp += parseInt(time[1]) * 60;
             info.timestamp += parseInt(time[2]);
@@ -387,6 +415,7 @@
                 inf: $message.find('a.f23').attr('href'),
             };
 
+            // этого пидора помечаем отдельно
             info.is_herald = info.sender.name === 'Герольд';
 
             let $receiver = $message.find('.abzac .bold.f23');
@@ -406,6 +435,7 @@
 
     function updateChat() {
         return getNewMessages().then(messages => {
+            // обновляем сообщения, только если что-то новое пришло
             if (messages[0].timestamp !== this.last_timestamp)
                 printMessages(messages, $main_container);
             this.last_timestamp = messages[0].timestamp;
@@ -416,6 +446,56 @@
     /*----------------------*/
     /*----------------------*/
 
+    /**
+        Аналог fetch, но все запросы идёт последовательно.
+        Существует из-за того что зачастую если сделать одновременно два запроса
+        к velgame.ru в предлах одной сессии, то вернётся 500.
+    */
+    function fetch_queue() {
+        // сохряняем аргументы, т.к. дальше у функции буду уже свои
+        let args = arguments;
+        return new Promise(async (resolve) => {
+            // пихаем запрос в очередь
+            this.queue = this.queue || [];
+            this.queue.push({
+                resolve,
+                args
+            });
+
+            // если сейчас что-то работает, то выходим
+            if (this.current)
+                return;
+
+            // иначе, начинаем доставать по очереди все запросы и выполняем их
+            while (this.current = this.queue.shift()) {
+                let resp = await fetch(...this.current.args);
+                this.current.resolve(resp);
+            }
+        });
+    }
+
+    /*----------------------*/
+    /*----------------------*/
+    /*----------------------*/
+
+    function getFormHtml() {
+        return `
+            <div class="msg" contenteditable="true" role="textbox"></div>
+            <textarea class="hidden" name="mes"></textarea>
+            <div class="bottom-panel">
+                <div class="col response">
+                    <div class="response_for"></div>
+                    <label>
+                        <input type="checkbox" name="lichka"> Личное
+                    </label>
+                </div>
+                <div class="col">
+                    <button class="info" type="submit">Отправить (shift+enter)</button>
+                    <div class="message_info small">1 сообщение. Осталось символов ≈250</div>
+                </div>
+            </div>
+        `;
+    }
 
     function loadCustomCss() {
         let $style = $('<style>');
@@ -502,34 +582,6 @@
                 cursor: pointer;
             }
         `);
-    }
-
-    /**
-        Аналог fetch, но все запросы идёт последовательно.
-        Существует из-за того что зачастую если сделать одновременно два запроса
-        к velgame.ru в предлах одной сессии, то вернётся 500.
-    */
-    function fetch_queue() {
-        // сохряняем аргументы, т.к. дальше у функции буду уже свои
-        let args = arguments;
-        return new Promise(async (resolve) => {
-            // пихаем запрос в очередь
-            this.queue = this.queue || [];
-            this.queue.push({
-                resolve,
-                args
-            });
-
-            // если сейчас что-то работает, то выходим
-            if (this.current)
-                return;
-
-            // иначе, начинаем доставать по очереди все запросы и выполняем их
-            while (this.current = this.queue.shift()) {
-                let resp = await fetch(...this.current.args);
-                this.current.resolve(resp);
-            }
-        });
     }
 
 
