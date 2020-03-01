@@ -23,7 +23,7 @@
         $main_container
     );
 
-    setInterval(updateChat, 1000);
+    setInterval(updateChat, 5000);
 
 
     /*----------------------*/
@@ -34,6 +34,8 @@
 
         control_buttons.$write.addClass('hidden');
         control_buttons.$update.addClass('hidden');
+
+        fixPagination();
 
         let $form = $('<form class="message_form" method="post">');
         $form.insertBefore(control_buttons.$write);
@@ -49,8 +51,8 @@
                     </label>
                 </div>
                 <div class="col">
-                    <div class="message_info small">1 сообщение. Осталось символов ≈250</div>
                     <button class="info" type="submit">Отправить (shift+enter)</button>
+                    <div class="message_info small">1 сообщение. Осталось символов ≈250</div>
                 </div>
             </div>
         `);
@@ -108,7 +110,10 @@
                     $form.attr('action', makeActionLink(control_buttons.$write.attr('href')))
                     $(this).html('');
                 })
-                .html(`Ответ для <span class="name">${$(this).text()}</span>`);
+                .html(`Ответ для <span class="name">${$(this).text()}</span>`); 
+
+            let is_private = $(this).parent().attr('data-pritate') === 'true';
+            $('[name="lichka"]').prop('checked', is_private);
         });
     };
 
@@ -169,7 +174,7 @@
             // почему-то если отпралять только обязательные заголовки, 
             // то сообщение не отправляется, поэтому даём серверу то, 
             // что он хочет
-            let html = await fetch_queue($form.attr('action') || referrer, {
+            let html = await fetch_queue(makeActionLink($form.attr('action') || referrer), {
                 "credentials": "include",
                 "headers": {
                     "accept": "text/html,application/xhtml+xml," +
@@ -252,6 +257,12 @@
         return link.replace(/&2($|\|)/, '&1$1');
     }
 
+    function fixPagination() {
+        let $new_container = $('<div class="frame">');
+        $new_container.insertAfter($main_container);
+        $new_container.append($('.chblock0 + .fblock .pag').parent().detach());
+    }
+
     /*----------------------*/
     /*----------------------*/
     /*----------------------*/
@@ -273,11 +284,12 @@
             let time_diff = last_message.timestamp - message.timestamp;
             let is_same_receiver = last_message.receiver === message.receiver;
             let is_same_sender = last_message.sender.name === message.sender.name;
+            let is_same_privat = last_message.is_privat === message.is_privat;
 
-            if (Math.abs(time_diff) < 3 && is_same_sender && is_same_receiver) {
+            if (Math.abs(time_diff) < 3 && is_same_sender && is_same_receiver && is_same_privat) {
                 last_message.time = message.time;
                 last_message.timestamp = message.timestamp;
-                last_message.text = concatMessages(last_message.text, message.text);
+                last_message.text = concatMessages(last_message, message);
 
                 repack[last_ind()] = last_message;
                 continue;
@@ -293,9 +305,13 @@
         });
     }
 
-    function concatMessages(oldText, newText) {
-        newText = newText.replace(/<\/?div.*?>/gm, '');
+    function concatMessages(oldMessage, newMessage) {
+        let newText = newMessage.text.replace(/<\/?div.*?>/gm, '');
 
+        if (oldMessage.is_herald)
+            newText += `\n`;
+
+        let oldText = oldMessage.text;
         // вставляем новый текст сразу после первого открывающего div'а
         return oldText.replace(/^(<div.+?>)/, `$1${newText}`);
     }
@@ -303,10 +319,17 @@
     function $messageEl(info) {
         let $container = $('<div class="chblock0">');
 
+        if(info.is_privat)
+            $container.attr('data-pritate', 'true');
+
+        if(info.is_herald)
+            $container.attr('data-herald', 'true');
+
         $container.html(`
                 <span class="small f3">${info.time}</span>
                 <a class="bold f2 response_button" href="${info.sender.answer}">${info.sender.name}</a>
                 [<a class="f23" href="${info.sender.inf}">inf</a>]
+                ${!info.is_privat ? '' : '<span class="f16">[личное]</span>'}
                 ${info.text}
             `);
         if (info.receiver)
@@ -322,7 +345,6 @@
 
         let $container = $('<div>');
         $container.css('display', 'none');
-        $(document.body).append($container);
 
         html = html.replace(/.*<body.*?>(.+?)<\/body>.*/gm, '$1');
         $container.html(html);
@@ -351,7 +373,6 @@
 
             info.time = $message.find('.small.f3:first-child').text();
 
-
             let time = info.time.split(':');
             // не реальный timestamp. Нужен только для того что бы сравнивать сообщения по времени
             info.timestamp = parseInt(time[0]) * 60 * 60;
@@ -366,9 +387,13 @@
                 inf: $message.find('a.f23').attr('href'),
             };
 
+            info.is_herald = info.sender.name === 'Герольд';
+
             let $receiver = $message.find('.abzac .bold.f23');
             info.receiver = $receiver.text().replace(/, /, '');
             $receiver.remove();
+
+            info.is_privat = !!$message.html().match(/>\[личное\]<\/span/);
 
             info.text = '';
             $message.find('.abzac').each(function() {
@@ -381,7 +406,9 @@
 
     function updateChat() {
         return getNewMessages().then(messages => {
-            printMessages(messages, $main_container);
+            if (messages[0].timestamp !== this.last_timestamp)
+                printMessages(messages, $main_container);
+            this.last_timestamp = messages[0].timestamp;
         });
     }
 
