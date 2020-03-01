@@ -9,12 +9,12 @@
 // @license      Apache License 2.0
 // @run-at       document-end
 // @grant        none
-// @updateURL    https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/better-chat.user.js
-// @downloadURL  https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/better-chat.user.js
+// @updateURL    https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/improved-chat.user.js
+// @downloadURL  https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/improved-chat.user.js
 // @require      https://code.jquery.com/jquery-3.4.1.min.js
 // ==/UserScript==
 
-(function new_chat() {
+(function improved_chat() {
     // "можно было лучше", - скажите вы
     // "можно. делай и отправь pull request", - скажу я
 
