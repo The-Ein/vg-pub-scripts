@@ -133,7 +133,7 @@
                 .html('')
                 .trigger('input'); // что бы обновить инфу о длине сообщения и textarea
 
-            
+
             $form.find('[name="lichka"]').prop('checked', is_dialog);
             if (!is_dialog)
                 $$form.find('.response_for').click();
@@ -150,10 +150,10 @@
             // делаем переписку диалогом
             // иначе всё как обычно
             let new_action = makeActionLink($(this).attr('href'));
-            if($form.attr('action') === new_action)
-            	is_dialog = true;
+            if ($form.attr('action') === new_action)
+                is_dialog = true;
             else
-            	$form.attr('action', new_action)
+                $form.attr('action', new_action)
 
             $form.find('.response_for')
                 .one('click', function() {
@@ -355,6 +355,7 @@
 
         $container.html('');
         repack.forEach(item => {
+            item.text = prepareText(item.text);
             $container.append($messageEl(item));
         });
     }
@@ -482,6 +483,33 @@
                 printMessages(messages, $main_container);
             this.last_timestamp = messages[0].timestamp;
         });
+    }
+
+    /*----------------------*/
+    /*----------------------*/
+    /*----------------------*/
+
+
+    function prepareText(text) {
+        text = printEmoji(text);
+
+        return text;
+    }
+
+    function printEmoji(text) {
+        let allowed = getEmojiList();
+
+        for (let name in allowed) {
+            let img = allowed[name];
+            let alt = name.replace(':', '');
+
+            // RegExp только ради gm, иначе заменяем только первое
+            let search = new RegExp(name, 'gm');
+
+            text = text.replace(search, `<img src="help/dark_smiles/${img}" alt="${alt}">`);
+        }
+
+        return text;
     }
 
     /*----------------------*/
@@ -626,5 +654,75 @@
                 cursor: pointer;
             }
         `);
+    }
+
+    function getEmojiList() {
+        return {
+            // Взято тут: http://velgame.ru/game.php?14&1&1&-1&3
+            ':\\(': 'sad.gif',
+            ':\\)': 'smile3.gif',
+            ':acute': 'acute.gif',
+            ':agr': 'agr.gif',
+            ':bad': 'bad.gif',
+            ':bcat': 'bcat.gif',
+            ':beee': 'beee.gif',
+            ':blum': 'blum.gif',
+            ':blush1': 'blush1.gif',
+            ':blush2': 'blush2.gif',
+            ':boast': 'boast.gif',
+            ':bore': 'bore.gif',
+            ':bravo': 'bravo.gif',
+            ':cool': 'cool.gif',
+            ':cray': 'cray.gif',
+            ':crazy': 'crazy.gif',
+            ':D': 'laugh3.gif',
+            ':dance1': 'dance1.gif',
+            ':dance2': 'dance2.gif',
+            ':dance3': 'dance3.gif',
+            ':dance4': 'dance4.gif',
+            ':dntknw': 'dntknw.gif',
+            ':dntmnn': 'dntmnn.gif',
+            ':drinks': 'drinks.gif',
+            ':dwarf': 'dwarf.gif',
+            ':fcpalm': 'fcpalm.gif',
+            ':fool': 'fool.gif',
+            ':friends': 'friends.gif',
+            ':gamer': 'gamer1.gif',
+            ':gcray': 'gcray.gif',
+            ':good': 'good.gif',
+            ':good2': 'good2.gif',
+            ':help': 'help.gif',
+            ':hi': 'hi.gif',
+            ':ireful': 'ireful.gif',
+            ':joke': 'joke.gif',
+            ':king': 'king2.gif',
+            ':kiss1': 'kiss1.gif',
+            ':lazy': 'lazy.gif',
+            ':mag': 'wizard.gif',
+            ':mail': 'mail1.gif',
+            ':mda': 'mda.gif',
+            ':meet': 'meet.gif',
+            ':nasos': 'nasos.gif',
+            ':nea': 'nea.gif',
+            ':notme': 'notme.gif',
+            ':ok': 'ok.gif',
+            ':pardon': 'pardon.gif',
+            ':party': 'party.gif',
+            ':punish': 'punish.gif',
+            ':queen': 'queen.gif',
+            ':rofl': 'rofl.gif',
+            ':scare': 'scare.gif',
+            ':search': 'search.gif',
+            ':secret': 'secret.gif',
+            ':sorry': 'sorry.gif',
+            ':stop': 'stop.gif',
+            ':thanks': 'thanks.gif',
+            ':victory': 'victory.gif',
+            ':wacko': 'wacko2.gif',
+            ':wall': 'dash1.gif',
+            ':witch': 'witch.gif',
+            ':yahoo': 'yahoo.gif',
+            ':yes': 'yes3.gif',
+        }
     }
 })();
