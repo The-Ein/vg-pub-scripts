@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Улучшеный чат
 // @namespace    https://github.com/The-Ein
-// @version      0.1
+// @version      0.2
 // @description  Заменяет чат в игре на его улучшенную версию
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
@@ -112,17 +112,31 @@
             let lastLength = parts[parts.length - 1].length;
             let word = messageWord(parts.length);
 
-            $message_info.html(`${parts.length} ${word}. Осталось символов ≈${message_chunk_length - lastLength}`);
+            $message_info.html(
+                `${parts.length} ${word}. Осталось&nbsp;символов&nbsp;≈${message_chunk_length - lastLength}`
+            );
         });
+
+        /**
+        	Фиксируем ли мы диалог с конкретным человеком
+        */
+        let is_dialog = false;
 
         // отправляем сообщения при submit
         // так же чистим форму и принудительно обновляем сообщения 
         $form.submit(function(e) {
             send($form.clone())
                 .then(updateChat);
-            $form[0].reset();
-            $form.find('.msg').html('');
-            $form.find('.response_for').click();
+
+            //$form[0].reset();
+            $form.find('.msg')
+                .html('')
+                .trigger('input'); // что бы обновить инфу о длине сообщения и textarea
+
+            
+            $form.find('[name="lichka"]').prop('checked', is_dialog);
+            if (!is_dialog)
+                $$form.find('.response_for').click();
 
             e.preventDefault();
             return false;
@@ -132,16 +146,27 @@
         $main_container.on('click', '.response_button', function(e) {
             e.preventDefault();
 
-            $form.attr('action', makeActionLink($(this).attr('href')));
+            // если повторное нажатие на один и тот же ник, то 
+            // делаем переписку диалогом
+            // иначе всё как обычно
+            let new_action = makeActionLink($(this).attr('href'));
+            if($form.attr('action') === new_action)
+            	is_dialog = true;
+            else
+            	$form.attr('action', new_action)
+
             $form.find('.response_for')
                 .one('click', function() {
                     $form.attr('action', makeActionLink(control_buttons.$write.attr('href')))
                     $(this).html('');
+                    is_dialog = false;
                 })
-                .html(`Ответ для <span class="name">${$(this).text()}</span>`);
+                .html(`${is_dialog ? 'Беседа с' : 'Ответ для' } <span class="name">${$(this).text()}</span>`);
 
             let is_private = $(this).parent().attr('data-pritate') === 'true';
             $('[name="lichka"]').prop('checked', is_private);
+
+            this.clicktime = (new Date()).getTime();
         });
     };
 
@@ -532,7 +557,7 @@
             }
 
             .msg{
-                min-height: 40px;
+                min-height: 80px;
                 min-width: 100px;
                 font-size: 16px;
                 background: #40393a;
