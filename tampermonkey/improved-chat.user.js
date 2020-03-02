@@ -77,9 +77,10 @@
 
 
         $('div[contenteditable]').keydown(function(e) {
-            // отправка сообщения на shift+enter
+            // отправка сообщения на enter (без шифта)
             // но только в форме
-            if (e.shiftKey && e.keyCode === 13) {
+            if (!e.shiftKey && e.keyCode === 13) {
+                e.preventDefault();
                 $form.submit();
             }
         }).on('paste', function(e) {
@@ -496,7 +497,7 @@
 
     function getFormHtml() {
         return `
-            <div class="msg" contenteditable="true" role="textbox"></div>
+            <div class="msg" contenteditable="true" role="textbox"> </div>
             <textarea class="hidden" name="mes"></textarea>
             <div class="bottom-panel">
                 <div class="col response">
@@ -506,7 +507,7 @@
                     </label>
                 </div>
                 <div class="col">
-                    <button class="info" type="submit">Отправить (shift+enter)</button>
+                    <button class="info" type="submit">Отправить (enter)</button>
                     <div class="message_info small">1 сообщение. Осталось символов ≈250</div>
                 </div>
             </div>
