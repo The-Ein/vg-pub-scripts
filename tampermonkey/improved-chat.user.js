@@ -118,7 +118,7 @@
         });
 
         /**
-        	Фиксируем ли мы диалог с конкретным человеком
+            Фиксируем ли мы диалог с конкретным человеком
         */
         let is_dialog = false;
 
@@ -136,7 +136,7 @@
 
             $form.find('[name="lichka"]').prop('checked', is_dialog);
             if (!is_dialog)
-                $$form.find('.response_for').click();
+                $form.find('.response_for').click();
 
             e.preventDefault();
             return false;
@@ -492,6 +492,7 @@
 
     function prepareText(text) {
         text = printEmoji(text);
+        text = markupToHtml(text);
 
         return text;
     }
@@ -511,6 +512,37 @@
 
         return text;
     }
+
+    function markupToHtml(text) {
+        text = markToTag(text, '**', 'b');
+        text = markToTag(text, '__', 'i');
+        text = markToTag(text, '~~', 's');
+
+        return text;
+
+        function markToTag(text, mark, tagname) {
+            // https://stackoverflow.com/a/6969486
+            mark = mark.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            // Частный случай регулярки: https://regex101.com/r/5tiVFh/2
+            let search = new RegExp(`([^\S\\\\]|^)${mark}.+?[^\\\\]${mark}`, 'gm');
+
+            return text.replace(search, (full) => {
+                // если находим любой цельный тег
+                // то оставляем всё как есть
+                if (full.match(/<\S+?>/))
+                    return full;
+
+                let open_tag = new RegExp(`${mark}`);
+                let close_tag = new RegExp(`${mark}$`);
+                return full
+                    .replace(open_tag, `<${tagname}>`)
+                    .replace(close_tag, `</${tagname}>`);
+
+            });
+        }
+    }
+
 
     /*----------------------*/
     /*----------------------*/
