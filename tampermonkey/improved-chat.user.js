@@ -493,8 +493,28 @@
     function prepareText(text) {
         text = printEmoji(text);
         text = markupToHtml(text);
+        text = prepareLinks(text);
 
         return text;
+    }
+
+    function prepareLinks(text) {
+        // Пояснение и проверка: https://regex101.com/r/z84eB2/1
+        // Незначительно отличается от того что в коде
+        return text.replace(
+            /(^|\s|[();]|>)(([a-zA-Z]{2,}?:\/\/).+?)(?=\s|$|\.(\s|$)|&[a-z]{2,5};|[()])/gm,
+            (full, char_before, link, protocol) => {
+                let anchor = link.replace(protocol, '');
+
+                // Укорачиваем слишком длинные ссылки.
+                // idleness.ru/asd-qwe-zxc-rty сократится idleness.ru/asd-qwe-...
+                // Но idleness.ru/asd-qwe-zxc останется idleness.ru/asd-qwe-zxc т.к. нет смысла
+                if(anchor.length > 23)
+                    anchor = anchor.replace(/(^.{20}).*/, '$1...')
+                
+                return `${char_before}<a href="${link}" class="text-link" target="_blank">${anchor}</a>`;
+            }
+        )
     }
 
     function printEmoji(text) {
@@ -619,7 +639,7 @@
             .msg{
                 min-height: 80px;
                 min-width: 100px;
-                font-size: 16px;
+                font-size: 14px;
                 background: #40393a;
                 color: #9acd32;
                 padding: 15px 20px;
@@ -684,6 +704,14 @@
 
             .bottom-panel button {
                 cursor: pointer;
+            }
+
+            .text-link {
+                color: #2196f4;
+            }
+
+            .text-link:hover {
+                color: gold;
             }
         `);
     }
