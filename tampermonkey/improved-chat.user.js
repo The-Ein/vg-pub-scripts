@@ -12,6 +12,7 @@
 // @updateURL    https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/improved-chat.user.js
 // @downloadURL  https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/improved-chat.user.js
 // @require      https://code.jquery.com/jquery-3.4.1.min.js
+// @icon         http://velgame.ru/icons/main/messin.png
 // ==/UserScript==
 
 (function improved_chat() {
