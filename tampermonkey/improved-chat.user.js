@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Улучшеный чат
+// @name         Улучшенный чат
 // @namespace    https://github.com/The-Ein
 // @version      0.2
 // @description  Заменяет чат в игре на его улучшенную версию
