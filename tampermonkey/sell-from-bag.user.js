@@ -51,7 +51,7 @@
             form.innerHTML += `
                 <div>
                     Количество:<br>
-                    <input type="number" name="kolvo" value="${count.curr}" max="${count.max}" min="1">
+                    <input type="text" name="kolvo" value="${count.curr}" max="${count.max}" min="1">
                 </div>
             `;
 
