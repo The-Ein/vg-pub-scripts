@@ -1,4 +1,4 @@
-## Установка любого в tampermonkey:
+## Установка скриптов:
 
 - скачиваем расширение c [tampermonkey.net](https://www.tampermonkey.net/), если ещё не сделали это
 - открываем нужный скрипт. Например [maps-coords-in-list.user.js](/tampermonkey/maps-coords-in-list.user.js)
