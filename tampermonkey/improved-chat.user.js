@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Улучшеный чат
+// @name         Улучшенный чат
 // @namespace    https://github.com/The-Ein
-// @version      0.1
+// @version      0.2
 // @description  Заменяет чат в игре на его улучшенную версию
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
@@ -12,6 +12,7 @@
 // @updateURL    https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/improved-chat.user.js
 // @downloadURL  https://github.com/The-Ein/vg-pub-scripts/raw/master/tampermonkey/improved-chat.user.js
 // @require      https://code.jquery.com/jquery-3.4.1.min.js
+// @icon         http://velgame.ru/icons/main/messin.png
 // ==/UserScript==
 
 (function improved_chat() {
@@ -42,7 +43,7 @@
     // контейнер в котором идёт работа
     const $main_container = $('body > .main .chblock0').parent();
 
-    // вставляем форму, скрываем кнопки, 
+    // вставляем форму, скрываем кнопки,
     // вешаем обработчики событий
     init();
 
@@ -61,7 +62,7 @@
     /*----------------------*/
 
     function init() {
-        // скрываем кнопки Написать и Обновить т.к. они больше не нужны пользователю 
+        // скрываем кнопки Написать и Обновить т.к. они больше не нужны пользователю
         control_buttons.$write.addClass('hidden');
         control_buttons.$update.addClass('hidden');
 
@@ -77,14 +78,15 @@
 
 
         $('div[contenteditable]').keydown(function(e) {
-            // отправка сообщения на shift+enter
+            // отправка сообщения на enter (без шифта)
             // но только в форме
-            if (e.shiftKey && e.keyCode === 13) {
+            if (!e.shiftKey && e.keyCode === 13) {
+                e.preventDefault();
                 $form.submit();
             }
         }).on('paste', function(e) {
             // чистим вставляемый текст
-            // из-за того что используется div, 
+            // из-за того что используется div,
             // вёрстка может вставиться 1 в 1
             e.preventDefault();
             var text = '';
@@ -101,7 +103,7 @@
         });
 
         // выводим и обновляем инфу о том сколько будет сообщений,
-        // и колличество оставшихся символов в текущем сообщении  
+        // и колличество оставшихся символов в текущем сообщении
         let $message_info = $form.find('.message_info');
         $form.find('.msg').on('input', function() {
             let $textarea = $form.find('[name="mes"]');
@@ -111,17 +113,31 @@
             let lastLength = parts[parts.length - 1].length;
             let word = messageWord(parts.length);
 
-            $message_info.html(`${parts.length} ${word}. Осталось символов ≈${message_chunk_length - lastLength}`);
+            $message_info.html(
+                `${parts.length} ${word}. Осталось&nbsp;символов&nbsp;≈${message_chunk_length - lastLength}`
+            );
         });
 
+        /**
+            Фиксируем ли мы диалог с конкретным человеком
+        */
+        let is_dialog = false;
+
         // отправляем сообщения при submit
-        // так же чистим форму и принудительно обновляем сообщения 
+        // так же чистим форму и принудительно обновляем сообщения
         $form.submit(function(e) {
             send($form.clone())
                 .then(updateChat);
-            $form[0].reset();
-            $form.find('.msg').html('');
-            $form.find('.response_for').click();
+
+            //$form[0].reset();
+            $form.find('.msg')
+                .html('')
+                .trigger('input'); // что бы обновить инфу о длине сообщения и textarea
+
+
+            $form.find('[name="lichka"]').prop('checked', is_dialog);
+            if (!is_dialog)
+                $form.find('.response_for').click();
 
             e.preventDefault();
             return false;
@@ -131,16 +147,27 @@
         $main_container.on('click', '.response_button', function(e) {
             e.preventDefault();
 
-            $form.attr('action', makeActionLink($(this).attr('href')));
+            // если повторное нажатие на один и тот же ник, то
+            // делаем переписку диалогом
+            // иначе всё как обычно
+            let new_action = makeActionLink($(this).attr('href'));
+            if ($form.attr('action') === new_action)
+                is_dialog = true;
+            else
+                $form.attr('action', new_action)
+
             $form.find('.response_for')
                 .one('click', function() {
                     $form.attr('action', makeActionLink(control_buttons.$write.attr('href')))
                     $(this).html('');
+                    is_dialog = false;
                 })
-                .html(`Ответ для <span class="name">${$(this).text()}</span>`);
+                .html(`${is_dialog ? 'Беседа с' : 'Ответ для' } <span class="name">${$(this).text()}</span>`);
 
             let is_private = $(this).parent().attr('data-pritate') === 'true';
             $('[name="lichka"]').prop('checked', is_private);
+
+            this.clicktime = (new Date()).getTime();
         });
     };
 
@@ -329,6 +356,7 @@
 
         $container.html('');
         repack.forEach(item => {
+            item.text = prepareText(item.text);
             $container.append($messageEl(item));
         });
     }
@@ -337,7 +365,7 @@
         // удялем все div'ы т.к. чиним это стилями
         let newText = newMessage.text.replace(/<\/?div.*?>/gm, '');
 
-        // У Геральда всё не как у людей, 
+        // У Геральда всё не как у людей,
         // поэтому добавляем к его сообщениям переносы в конце
         if (oldMessage.is_herald)
             newText += `\n`;
@@ -403,11 +431,11 @@
     function parseMessages($list) {
         let list = [];
 
-        // проходимся по всем элементам 
+        // проходимся по всем элементам
         $list.each(function() {
             let $message = $(this);
 
-            // т.к. объекты передаются по ссылке, 
+            // т.к. объекты передаются по ссылке,
             // то сразу после создания мы вставляем его в массив
             // и только потом заполняем
             let info = {};
@@ -462,6 +490,85 @@
     /*----------------------*/
     /*----------------------*/
 
+
+    function prepareText(text) {
+        text = printEmoji(text);
+        text = markupToHtml(text);
+        text = prepareLinks(text);
+
+        return text;
+    }
+
+    function prepareLinks(text) {
+        // Пояснение и проверка: https://regex101.com/r/z84eB2/1
+        // Незначительно отличается от того что в коде
+        return text.replace(
+            /(^|\s|[();]|>)(([a-zA-Z]{2,}?:\/\/).+?)(?=\s|$|\.(\s|$)|&[a-z]{2,5};|[()])/gm,
+            (full, char_before, link, protocol) => {
+                let anchor = link.replace(protocol, '');
+
+                // Укорачиваем слишком длинные ссылки.
+                // idleness.ru/asd-qwe-zxc-rty сократится idleness.ru/asd-qwe-...
+                // Но idleness.ru/asd-qwe-zxc останется idleness.ru/asd-qwe-zxc т.к. нет смысла
+                if(anchor.length > 23)
+                    anchor = anchor.replace(/(^.{20}).*/, '$1...')
+                
+                return `${char_before}<a href="${link}" class="text-link" target="_blank">${anchor}</a>`;
+            }
+        )
+    }
+
+    function printEmoji(text) {
+        let allowed = getEmojiList();
+
+        for (let name in allowed) {
+            let img = allowed[name];
+            let alt = name.replace(':', '');
+
+            // RegExp только ради gm, иначе заменяем только первое
+            let search = new RegExp(name, 'gm');
+
+            text = text.replace(search, `<img src="help/dark_smiles/${img}" alt="${alt}">`);
+        }
+
+        return text;
+    }
+
+    function markupToHtml(text) {
+        text = markToTag(text, '**', 'b');
+        text = markToTag(text, '__', 'i');
+        text = markToTag(text, '~~', 's');
+
+        return text;
+
+        function markToTag(text, mark, tagname) {
+            // https://stackoverflow.com/a/6969486
+            mark = mark.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            // Частный случай регулярки: https://regex101.com/r/5tiVFh/2
+            let search = new RegExp(`([^\S\\\\]|^)${mark}.+?[^\\\\]${mark}`, 'gm');
+
+            return text.replace(search, (full) => {
+                // если находим любой цельный тег
+                // то оставляем всё как есть
+                if (full.match(/<\S+?>/))
+                    return full;
+
+                let open_tag = new RegExp(`${mark}`);
+                let close_tag = new RegExp(`${mark}$`);
+                return full
+                    .replace(open_tag, `<${tagname}>`)
+                    .replace(close_tag, `</${tagname}>`);
+
+            });
+        }
+    }
+
+
+    /*----------------------*/
+    /*----------------------*/
+    /*----------------------*/
+
     /**
         Аналог fetch, но все запросы идёт последовательно.
         Существует из-за того что зачастую если сделать одновременно два запроса
@@ -496,7 +603,7 @@
 
     function getFormHtml() {
         return `
-            <div class="msg" contenteditable="true" role="textbox"></div>
+            <div class="msg" contenteditable="true" role="textbox"> </div>
             <textarea class="hidden" name="mes"></textarea>
             <div class="bottom-panel">
                 <div class="col response">
@@ -506,7 +613,7 @@
                     </label>
                 </div>
                 <div class="col">
-                    <button class="info" type="submit">Отправить (shift+enter)</button>
+                    <button class="info" type="submit">Отправить (enter)</button>
                     <div class="message_info small">1 сообщение. Осталось символов ≈250</div>
                 </div>
             </div>
@@ -531,9 +638,9 @@
             }
 
             .msg{
-                min-height: 40px;
+                min-height: 80px;
                 min-width: 100px;
-                font-size: 16px;
+                font-size: 14px;
                 background: #40393a;
                 color: #9acd32;
                 padding: 15px 20px;
@@ -599,6 +706,84 @@
             .bottom-panel button {
                 cursor: pointer;
             }
+
+            .text-link {
+                color: #2196f4;
+            }
+
+            .text-link:hover {
+                color: gold;
+            }
         `);
+    }
+
+    function getEmojiList() {
+        return {
+            // Взято тут: http://velgame.ru/game.php?14&1&1&-1&3
+            ':\\(': 'sad.gif',
+            ':\\)': 'smile3.gif',
+            ':acute': 'acute.gif',
+            ':agr': 'agr.gif',
+            ':bad': 'bad.gif',
+            ':bcat': 'bcat.gif',
+            ':beee': 'beee.gif',
+            ':blum': 'blum.gif',
+            ':blush1': 'blush1.gif',
+            ':blush2': 'blush2.gif',
+            ':boast': 'boast.gif',
+            ':bore': 'bore.gif',
+            ':bravo': 'bravo.gif',
+            ':cool': 'cool.gif',
+            ':cray': 'cray.gif',
+            ':crazy': 'crazy.gif',
+            ':D': 'laugh3.gif',
+            ':dance1': 'dance1.gif',
+            ':dance2': 'dance2.gif',
+            ':dance3': 'dance3.gif',
+            ':dance4': 'dance4.gif',
+            ':dntknw': 'dntknw.gif',
+            ':dntmnn': 'dntmnn.gif',
+            ':drinks': 'drinks.gif',
+            ':dwarf': 'dwarf.gif',
+            ':fcpalm': 'fcpalm.gif',
+            ':fool': 'fool.gif',
+            ':friends': 'friends.gif',
+            ':gamer': 'gamer1.gif',
+            ':gcray': 'gcray.gif',
+            ':good': 'good.gif',
+            ':good2': 'good2.gif',
+            ':help': 'help.gif',
+            ':hi': 'hi.gif',
+            ':ireful': 'ireful.gif',
+            ':joke': 'joke.gif',
+            ':king': 'king2.gif',
+            ':kiss1': 'kiss1.gif',
+            ':lazy': 'lazy.gif',
+            ':mag': 'wizard.gif',
+            ':mail': 'mail1.gif',
+            ':mda': 'mda.gif',
+            ':meet': 'meet.gif',
+            ':nasos': 'nasos.gif',
+            ':nea': 'nea.gif',
+            ':notme': 'notme.gif',
+            ':ok': 'ok.gif',
+            ':pardon': 'pardon.gif',
+            ':party': 'party.gif',
+            ':punish': 'punish.gif',
+            ':queen': 'queen.gif',
+            ':rofl': 'rofl.gif',
+            ':scare': 'scare.gif',
+            ':search': 'search.gif',
+            ':secret': 'secret.gif',
+            ':sorry': 'sorry.gif',
+            ':stop': 'stop.gif',
+            ':thanks': 'thanks.gif',
+            ':victory': 'victory.gif',
+            ':wacko': 'wacko2.gif',
+            ':wall': 'dash1.gif',
+            ':witch': 'witch.gif',
+            ':yahoo': 'yahoo.gif',
+            ':yes': 'yes3.gif',
+        }
     }
 })();
