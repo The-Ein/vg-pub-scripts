@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Улучшенный чат
 // @namespace    https://github.com/The-Ein
-// @version      0.2
+// @version      0.3
 // @description  Заменяет чат в игре на его улучшенную версию
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
@@ -290,10 +290,19 @@
         // сначала заменяем все открывающие <div> на переносы
         // что бы, внезапно, не проебать переносы.
         // после удаляем все теги которые добавил браузер
-        // все пользовательское будет выглядеть как-то так: &lt; (<)
-        return text
+        text = text
             .replace(/<div.*?>/gm, `\n`)
             .replace(/<\/?.+?>/gm, '');
+
+        // div экранирует все html сущности 
+        // поэтому многие символы будут выглядить так: &lt; (<)
+        // просблема в том, что в чате удаляется вся строка после апмерсанда
+        // т.е. такая строка:
+        //    asdasd &gt; asd &gt; asdasda asdasd &gt; asdasdads
+        // обрежется до:
+        //    asdads
+        // собсвтенно делаем так что бы все html сущности стали снова неэкранированы
+        return $('<textarea>').html(text).text();
     }
 
     function makeActionLink(link) {
