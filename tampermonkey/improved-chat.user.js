@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Улучшенный чат
 // @namespace    https://github.com/The-Ein
-// @version      0.4
+// @version      0.5
 // @description  Заменяет чат в игре на его улучшенную версию
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
@@ -509,10 +509,10 @@
     }
 
     function prepareLinks(text) {
-        // Пояснение и проверка: https://regex101.com/r/z84eB2/1
+        // Пояснение и проверка: https://regex101.com/r/z84eB2/2
         // Незначительно отличается от того что в коде
         return text.replace(
-            /(^|\s|[();]|>)(([a-zA-Z]{2,}?:\/\/).+?)(?=\s|$|\.(\s|$)|&[a-z]{2,5};|[()])/gm,
+            /(^|\s|[();<>{}])(([a-zA-Z]{2,}?:\/\/).+?)(?=\s|$|\.(\s|$)|&[a-z]{2,5};|[()<>{}])/gm,
             (full, char_before, link, protocol) => {
                 let anchor = link.replace(protocol, '');
 
