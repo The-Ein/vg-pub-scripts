@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Улучшенный чат
 // @namespace    https://github.com/The-Ein
-// @version      0.3
+// @version      0.4
 // @description  Заменяет чат в игре на его улучшенную версию
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
@@ -287,11 +287,11 @@
     }
 
     function clearText(text) {
-        // сначала заменяем все открывающие <div> на переносы
+        // сначала заменяем все открывающие <div> и <br/> на переносы
         // что бы, внезапно, не проебать переносы.
         // после удаляем все теги которые добавил браузер
         text = text
-            .replace(/<div.*?>/gm, `\n`)
+            .replace(/<div.*?>|<br ?\/?>/gm, `\n`)
             .replace(/<\/?.+?>/gm, '');
 
         // div экранирует все html сущности 
