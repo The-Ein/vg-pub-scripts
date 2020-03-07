@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Улучшенный чат
 // @namespace    https://github.com/The-Ein
-// @version      0.5
+// @version      0.6
 // @description  Заменяет чат в игре на его улучшенную версию
 // @author       TheEin
 // @match        http://velgame.ru/game.php*
@@ -134,10 +134,10 @@
                 .html('')
                 .trigger('input'); // что бы обновить инфу о длине сообщения и textarea
 
-
-            $form.find('[name="lichka"]').prop('checked', is_dialog);
-            if (!is_dialog)
+            if (!is_dialog){
+                $form.find('[name="lichka"]').prop('checked', false);
                 $form.find('.response_for').click();
+            }
 
             e.preventDefault();
             return false;
